@@ -1,4 +1,4 @@
-/*
+```
 $ ipcs
 
 ------ Message Queues --------
@@ -22,5 +22,4 @@ $
 $ ipcrm sem 23 24
 resource(s) deleted
 $
-
-*/
+```
