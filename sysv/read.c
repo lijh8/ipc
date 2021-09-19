@@ -29,14 +29,14 @@ void init()
         exit(-1);
     }
 
-    g_sem_r = semget(SEM_R,1,IPC_CREAT|0666);
-    if(g_sem_r==-1){
+    g_sem_r = semget(SEM_R, 1, IPC_CREAT | 0666);
+    if(g_sem_r == -1){
         perror("semget");
         exit(-1);
     }
 
-    g_sem_w = semget(SEM_W,1,IPC_CREAT|0666);
-    if(g_sem_w==-1){
+    g_sem_w = semget(SEM_W, 1, IPC_CREAT | 0666);
+    if(g_sem_w == -1){
         perror("semget");
         exit(-1);
     }
