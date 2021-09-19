@@ -20,10 +20,12 @@ struct sembuf g_semop;
 
 void handler(int sig)
 {
-    shmdt(g_shmptr);
-    semctl(g_sem_r,0,IPC_RMID);
-    semctl(g_sem_w,0,IPC_RMID);
-    exit(0);
+    //don't remove it, just leave it there
+    //so, read, write, each side can quit or start at any time
+    // shmdt(g_shmptr);
+    // semctl(g_sem_r,0,IPC_RMID);
+    // semctl(g_sem_w,0,IPC_RMID);
+    // exit(0);
 }
 
 void init()
