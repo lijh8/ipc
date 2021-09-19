@@ -1,4 +1,7 @@
 //read.c
+//ipcs
+//ipcrm sem 12
+//ipcrm shm 34
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,7 +28,7 @@ void handler(int sig)
 
 void init()
 {
-    signal(SIGINT,handler);
+    // signal(SIGINT,handler);
 
     g_shmid = shmget(SHM,LEN,IPC_CREAT|0666);
     if(g_shmid==-1){
@@ -57,11 +60,13 @@ int main()
     init();
 
     while(1){
+        printf("%s: %s\n", __FILE__, "P");
         P(g_sem_w, g_semop);
 
-        printf("%s",(char *)g_shmptr);
+        // printf("%s: %s\n", __FILE__, (char *)g_shmptr);
 
         V(g_sem_r, g_semop);
+        printf("%s: %s\n", __FILE__, "V");
     }
 
     return 0;
