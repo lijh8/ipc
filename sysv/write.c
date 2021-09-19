@@ -27,7 +27,7 @@ void handler(int sig)
 
 void init()
 {
-    // signal(SIGINT,handler);
+    // signal(SIGINT,handler); //don't remove it, just leave it there
 
     g_shmid = shmget(SHM,LEN,IPC_CREAT|0666);
     if(g_shmid==-1){
