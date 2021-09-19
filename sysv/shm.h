@@ -8,20 +8,13 @@
 #include <sys/sem.h>
 
 #define LEN 1024
-#define SHM 0X1001
-#define SEM1 0X1002
-#define SEM2 0X1003
+#define SHM 0x1001
+#define SEM_R 0x1002
+#define SEM_W 0x1003
 
-#define P(sem, op) do { \
-    op.sem_num = 0; \
-    op.sem_op = -1; \
-    op.sem_flg = 0; \
-    semop(sem,&op,1); \
-} while (0)
-
-#define V(sem, op) do { \
-    op.sem_op = 1; \
-    semop(sem,&op,1); \
-} while (0)
+//P: 🅿️ in Car Park. Stop, Wait.
+//V: VP, UP, Wake UP. they look similar
+#define P(sem) semop(sem, &(struct sembuf){.sem_num = 0, .sem_op = -1, .sem_flg = 0}, 1)
+#define V(sem) semop(sem, &(struct sembuf){.sem_num = 0, .sem_op = 1, .sem_flg = 0}, 1)
 
 #endif
