@@ -1,47 +1,38 @@
+// server.cpp
+
 #include <stdio.h>
-#include <stdlib.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <string.h>
-#include <limits.h>
 #include <signal.h>
+#include <limits.h>
 
 #include "common.h"
 
 int main() {
-    int fd;
-    char buf[PIPE_BUF]; // Writes of up to PIPE_BUF bytes are guaranteed to be atomic
-
-    // Create the FIFO if it doesn't exist
     mkfifo(FIFO_SERVER_TO_CLIENT, 0666);
+    mkfifo(FIFO_CLIENT_TO_SERVER, 0666);
+    int fd_server_to_client = open(FIFO_SERVER_TO_CLIENT, O_WRONLY);
+    int fd_client_to_server = open(FIFO_CLIENT_TO_SERVER, O_RDONLY);
 
-    printf("Writer: Opening FIFO...\n");
-    fd = open(FIFO_SERVER_TO_CLIENT, O_WRONLY);
-    printf("Writer: FIFO opened\n");
+    signal(SIGPIPE, SIG_IGN);
 
-    if (signal(SIGPIPE, SIG_IGN) == SIG_ERR){
-        perror("signal");
-        return -1;
-    }
+    char buf[PIPE_BUF]; // write up to PIPE_BUF size is atomic
+    unsigned seq = 0;
 
-    while (1) {
-        printf("Enter message (type 'exit' to quit): ");
-        fgets(buf, sizeof(buf), stdin);
+    for (;;) {
+        snprintf(buf, sizeof(buf), "Server: %u", seq++);
+        write(fd_server_to_client, buf, sizeof(buf));
 
-        // Remove newline if present
-        buf[strcspn(buf, "\n")] = 0;
-
-        // Write to FIFO
-        write(fd, buf, strlen(buf)+1); // +1 to include null terminator
-
-        if (strcmp(buf, "exit") == 0) {
-            break;
+        if (read(fd_client_to_server, buf, sizeof(buf)) > 0) {
+            printf("%s\n", buf);
         }
+
     }
 
-    close(fd);
-    unlink(FIFO_SERVER_TO_CLIENT); // Remove the FIFO
+    close(fd_server_to_client);
+    close(fd_client_to_server);
+    unlink(FIFO_SERVER_TO_CLIENT);
+    unlink(FIFO_CLIENT_TO_SERVER);
     return 0;
 }

@@ -1,43 +1,38 @@
+// client.cpp
+
 #include <stdio.h>
-#include <stdlib.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <string.h>
-#include <limits.h>
 #include <signal.h>
+#include <limits.h>
 
 #include "common.h"
 
 int main() {
-    int fd;
-    char buf[PIPE_BUF];
+    mkfifo(FIFO_SERVER_TO_CLIENT, 0666);
+    mkfifo(FIFO_CLIENT_TO_SERVER, 0666);
+    int fd_server_to_client = open(FIFO_SERVER_TO_CLIENT, O_RDONLY);
+    int fd_client_to_server = open(FIFO_CLIENT_TO_SERVER, O_WRONLY);
 
-    printf("Reader: Opening FIFO...\n");
-    fd = open(FIFO_SERVER_TO_CLIENT, O_RDONLY);
-    printf("Reader: FIFO opened\n");
+    signal(SIGPIPE, SIG_IGN);
 
-    if (signal(SIGPIPE, SIG_IGN) == SIG_ERR){
-        perror("signal");
-        return -1;
-    }
+    char buf[PIPE_BUF]; // write up to PIPE_BUF size is atomic
+    unsigned seq = 0;
 
-    while (1) {
-        // Read from FIFO
-        int bytes_read = read(fd, buf, sizeof(buf));
-        if (bytes_read <= 0) {
-            perror("read");
-            break;
+    for (;;) {
+        if (read(fd_server_to_client, buf, sizeof(buf)) > 0) {
+            printf("%s\n", buf);
         }
 
-        printf("Received: %s\n", buf);
+        snprintf(buf, sizeof(buf), "Client: %u", seq++);
+        write(fd_client_to_server, buf, sizeof(buf));
 
-        if (strcmp(buf, "exit") == 0) {
-            break;
-        }
     }
 
-    close(fd);
+    close(fd_server_to_client);
+    close(fd_client_to_server);
+    unlink(FIFO_SERVER_TO_CLIENT);
+    unlink(FIFO_CLIENT_TO_SERVER);
     return 0;
 }
