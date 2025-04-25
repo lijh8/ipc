@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/sem.h>
 #include "shm.h"
 
 void *g_shmptr = NULL;
@@ -17,6 +18,8 @@ int g_sem_w;
 //use ipcrm to remove them from command line.
 void init()
 {
+    union semun arg;
+
     int shmid = shmget(SHM, LEN, IPC_CREAT | 0666);
     if(shmid == -1){
         perror("shmget");
@@ -41,13 +44,15 @@ void init()
         exit(-1);
     }
 
-    int rt = semctl(g_sem_r, 0, SETVAL, 1);  //set 1
+    arg.val = 1;
+    int rt = semctl(g_sem_r, 0, SETVAL, arg);  //set 1
     if(rt == -1){
         perror("semctl");
         exit(-1);
     }
 
-    rt = semctl(g_sem_w, 0, SETVAL, 0);
+    arg.val = 0;
+    rt = semctl(g_sem_w, 0, SETVAL, arg);
     if(rt == -1){
         perror("semctl");
         exit(-1);
@@ -62,7 +67,8 @@ int main()
         printf("%s: %s\n", __FILE__, "P");
         P(g_sem_r);
 
-        memcpy(g_shmptr, "hello", LEN - 1);
+        strncpy((char*)g_shmptr, "hello", LEN - 1); // ok
+        // memcpy(g_shmptr, "hello", LEN - 1); // err: -Wstringop-overread
         ((char*)g_shmptr)[LEN-1] = 0;
         sleep(1); //
 
