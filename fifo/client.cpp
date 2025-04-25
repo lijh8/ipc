@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <limits.h>
+#include <errno.h>
+#include <string.h>
 
 #include "common.h"
 
@@ -21,13 +23,23 @@ int main() {
     unsigned seq = 0;
 
     for (;;) {
-        if (read(fd_server_to_client, buf, sizeof(buf)) > 0) {
+        int n = read(fd_server_to_client, buf, sizeof(buf));
+        if (n == 0) {
+            printf("All peer disconnected\n");
+            break;
+        } else if (n > 0) {
             printf("%s\n", buf);
         }
 
         snprintf(buf, sizeof(buf), "Client: %u", seq++);
-        write(fd_client_to_server, buf, sizeof(buf));
+        n = write(fd_client_to_server, buf, sizeof(buf));
+        int err = errno;
+        if (n == -1 && err == EPIPE){
+            printf("%s\n", strerror(err));
+            break;
+        }
 
+        // sleep(1); // test
     }
 
     close(fd_server_to_client);
