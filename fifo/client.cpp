@@ -18,19 +18,20 @@ int main() {
 
     signal(SIGPIPE, SIG_IGN);
 
-    char buf[PIPE_BUF]; // write up to PIPE_BUF size is atomic
+    char buf[PIPE_BUF] = {0}; // write up to PIPE_BUF size is atomic
     unsigned seq = 0;
 
     for (;;) {
-        snprintf(buf, sizeof(buf), "%u", seq++);
-        int cnt = write(fd_client_to_server, buf, sizeof(buf));
+        snprintf(buf, sizeof(buf) - 1, "%u", seq++);
+        int cnt = write(fd_client_to_server, buf, sizeof(buf) - 1);
         int err = errno;
         if (cnt == -1 && err == EPIPE){
             printf("%s\n", strerror(err));
             break;
         }
 
-        cnt = read(fd_server_to_client, buf, sizeof(buf));
+        cnt = read(fd_server_to_client, buf, sizeof(buf) - 1);
+        buf[sizeof(buf) - 1] = 0;
         if (cnt == 0) {
             printf("All peer offline\n");
             break;
