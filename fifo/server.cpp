@@ -1,7 +1,6 @@
 // server.cpp
 
 #include <stdio.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <signal.h>
@@ -14,8 +13,8 @@
 int main() {
     mkfifo(FIFO_SERVER_TO_CLIENT, 0666);
     mkfifo(FIFO_CLIENT_TO_SERVER, 0666);
-    int fd_server_to_client = open(FIFO_SERVER_TO_CLIENT, O_WRONLY);
-    int fd_client_to_server = open(FIFO_CLIENT_TO_SERVER, O_RDONLY);
+    int fd_server_to_client = open(FIFO_SERVER_TO_CLIENT, O_WRONLY); // open blocks until opposite O_RDONLY
+    int fd_client_to_server = open(FIFO_CLIENT_TO_SERVER, O_RDONLY); // open blocks until opposite O_WRONLY
 
     signal(SIGPIPE, SIG_IGN);
 
@@ -23,20 +22,20 @@ int main() {
     unsigned seq = 0;
 
     for (;;) {
-        snprintf(buf, sizeof(buf), "Server: %u", seq++);
-        int n = write(fd_server_to_client, buf, sizeof(buf));
+        snprintf(buf, sizeof(buf), "%u", seq++);
+        int cnt = write(fd_server_to_client, buf, sizeof(buf));
         int err = errno;
-        if (n == -1 && err == EPIPE){
+        if (cnt == -1 && err == EPIPE){
             printf("%s\n", strerror(err));
             break;
         }
 
-        n = read(fd_client_to_server, buf, sizeof(buf));
-        if (n == 0) {
-            printf("All peer disconnected\n");
+        cnt = read(fd_client_to_server, buf, sizeof(buf));
+        if (cnt == 0) {
+            printf("All peer offline\n");
             break;
-        } else if (n > 0) {
-            printf("%s\n", buf);
+        } else if (cnt > 0) {
+            printf("from client: %s\n", buf);
         }
 
         // sleep(1); // test
