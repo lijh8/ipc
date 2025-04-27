@@ -13,7 +13,7 @@
 
 void sub()
 {
-    int fd = open(SUB_TO_MAIN, O_WRONLY); // open blocks until opposite O_WRONLY
+    int fd = open(SUB_TO_MAIN, O_WRONLY); // open blocks until opposite O_RDONLY
 
     char buf[PIPE_BUF - 1] = {0}; // write up to PIPE_BUF size is atomic
 
@@ -35,7 +35,7 @@ void sub()
 int main() {
     mkfifo(SUB_TO_MAIN, 0666);
     std::jthread jt(sub);
-    int fd = open(SUB_TO_MAIN, O_RDONLY); // open blocks until opposite O_RDONLY
+    int fd = open(SUB_TO_MAIN, O_RDONLY); // open blocks until opposite O_WRONLY
     signal(SIGPIPE, SIG_IGN);
     char buf[PIPE_BUF - 1] = {0}; // write up to PIPE_BUF size is atomic
 
