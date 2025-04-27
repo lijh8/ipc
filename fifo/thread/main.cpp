@@ -27,15 +27,15 @@ void sub()
         cnt = write(fd_sub_to_main, buf, sizeof(buf) - 1);
         err = errno;
         if (cnt == -1 && err == EPIPE){
-            printf("%s\n", strerror(err));
+            printf("The read end is closed: %s\n", strerror(err));
             break;
         }
 
-        //read
+        // read
         int cnt = read(fd_main_to_sub, buf, sizeof(buf) - 1);
         buf[sizeof(buf) - 1] = 0;
         if (cnt == 0) {
-            printf("All peer offline\n");
+            printf("The write end is closed\n");
             break;
         } else if (cnt > 0) {
             printf("%s: %s\n", __func__, buf);
@@ -70,7 +70,7 @@ int main() {
         cnt = write(fd_main_to_sub, buf, sizeof(buf) - 1);
         err = errno;
         if (cnt == -1 && err == EPIPE){
-            printf("%s\n", strerror(err));
+            printf("The read end is closed: %s\n", strerror(err));
             break;
         }
 
@@ -78,7 +78,7 @@ int main() {
         cnt = read(fd_sub_to_main, buf, sizeof(buf) - 1);
         buf[sizeof(buf) - 1] = 0;
         if (cnt == 0) {
-            printf("All peer offline\n");
+            printf("The write end is closed\n");
             break;
         } else if (cnt > 0) {
             printf("%s: %s\n", __func__, buf);
